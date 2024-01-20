@@ -1,0 +1,34 @@
+image:
+  name: "br-etl-stage-1"
+  repository: ""
+
+sparkVersion: 3.4.1
+
+onFailureRetries: 2
+onFailureRetryInterval: 30
+
+namespace: "spark-jobs"
+
+jobs:
+  - name: "vm-resource"
+    class: "VmResource"
+    schedule: "01 6 * * *"
+    driverMemory: "512m"
+    driverCores: "1"
+    driverCoreLimit: "1200m"
+    executorMemory: "512m"
+    executorCores: "1"
+    executorCoreLimit: "1200m"
+    executorInstances: "2"
+    maxExecutors: "2"
+  - name: "vm-backup-resource"
+    class: "VmBackupResource"
+    schedule: "02 6 * * *"
+    driverMemory: "512m"
+    driverCores: "1"
+    driverCoreLimit: "1200m"
+    executorMemory: "512m"
+    executorCores: "1"
+    executorCoreLimit: "1200m"
+    executorInstances: "2"
+    maxExecutors: "2"
