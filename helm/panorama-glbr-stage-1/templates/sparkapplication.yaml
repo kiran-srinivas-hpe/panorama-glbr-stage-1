@@ -1,0 +1,58 @@
+{{- range $job := .Values.jobs }}
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: ScheduledSparkApplication
+metadata:
+  name: spark-job-{{ $job.name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    jobgroup: spark-etl-jobs
+spec:
+  schedule: {{ $job.schedule }}
+  concurrencyPolicy: Allow
+  template:
+    type: Scala
+    mode: cluster
+    image: "test/br-etl-stage-1:latest"
+    imagePullPolicy: Never
+    mainClass: com.etl.{{ $job.class }}
+    mainApplicationFile: "local:///opt/spark/jars/br-etl-stage-1-0.1.jar"
+    sparkConf:
+      spark.sql.shuffle.partitions: "500"
+      spark.kubernetes.executor.podNamePrefix: {{ $job.name }}
+    sparkVersion: {{ $.Values.sparkVersion }}
+    restartPolicy:
+      type: OnFailure
+      onFailureRetries: {{ $.Values.onFailureRetries }}
+      onFailureRetryInterval: {{ $.Values.onFailureRetryInterval }}
+    volumes:
+      - name: "test-volume"
+        hostPath:
+          path: "/tmp"
+          type: Directory
+    driver:
+      cores: {{ $job.driverCores }}
+      coreLimit: {{ $job.driverCoreLimit }}
+      memory: {{ $job.driverMemory }}
+      labels:
+        version: 3.4.1
+      serviceAccount: spark
+      volumeMounts:
+        - name: "test-volume"
+          mountPath: "/tmp"
+    executor:
+      cores: {{ $job.executorCores }}
+      coreLimit: {{ $job.executorCoreLimit }}
+      instances: {{ $job.executorInstances }}
+      memory: {{ $job.executorMemory }}
+      labels:
+        version: 3.4.1
+      volumeMounts:
+        - name: "test-volume"
+          mountPath: "/tmp"
+    dynamicAllocation:
+      enabled: true
+      initialExecutors: {{ $job.executorInstances }}
+      minExecutors: {{ $job.executorInstances }}
+      maxExecutors: {{ $job.maxExecutors }}
+---
+{{- end }}
